@@ -6,8 +6,33 @@ import time
 from datetime import datetime
 import requests
 from geopy.geocoders import Nominatim
+import openai
 
-def scroll_to_bottom(driver, max_scroll=10):
+openai.api_key = "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"
+
+def generate_tags(event_title):
+    prompt = (
+        f"Generate tags related to the event \"{event_title}\". "
+        "These tags should be short, one-word keywords that accurately represent the essence of the event. "
+        "Please provide keywords that are directly related to the event title and can be used as tags. "
+        "Separate each tag with a comma and ensure that each tag is unique."
+    )
+
+    response = openai.Completion.create(
+        engine="davinci-002",
+        prompt=prompt,
+        max_tokens=50,  # Defina o número máximo de tokens de acordo com suas necessidades
+        n=1,
+        stop=None
+    )
+
+    # Extrair as tags e formatá-las corretamente
+    tags = response.choices[0].text.strip().split(",")
+    formatted_tags = [tag.strip() for tag in tags]
+    unique_tags = list(set(formatted_tags))  # Remover tags duplicadas
+    return unique_tags
+
+def scroll_to_bottom(driver, max_scroll=1):
     for _ in range(max_scroll):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)
@@ -98,12 +123,13 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
         event_title_elem = event_page.find('span', class_='x1lliihq x6ikm8r x10wlt62 x1n2onr6')
         if event_title_elem:
             event_title = event_title_elem.text.strip()
-            # Remova a chamada para a função calculate_similarity
-            # if any(calculate_similarity(event_title, existing_title) >= 90 for existing_title in unique_event_titles):
             if any(event_title == existing_title for existing_title in unique_event_titles):
                 continue
         else:
             continue  # Skip this event if title element is not found
+
+        # Geração de tags usando GPT
+        tags = generate_tags(event_title)
 
         location_div = event_page.find('div', class_='x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz xt0b8zv xzsf02u x1s688f')
         location_span = event_page.find('span', class_='xt0psk2')
@@ -112,9 +138,7 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
 
         latitude, longitude = get_coordinates(location_text)
 
-        # Abre o Google Maps com a localização do evento
         google_maps_url = open_google_maps(latitude, longitude)
-
 
         address_span = event_page.find('span', class_='x193iq5w xeuugli x13faqbe x1vvkbs xlh3980 xvmahel x1n0sxbx x1lliihq x1s928wv xhkezso x1gmr53x x1cpjm7i x1fgarty x1943h6x x4zkp8e x3x7a5m x1f6kntn xvq8zen xo1l8bm xi81zsa x1yc453h')
         address = address_span.text.strip() if address_span else None
@@ -137,14 +161,12 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
         location_details['Location']['City'] = city
         location_details['Location']['CountryCode'] = country_code
 
-        # Se tanto a cidade quanto o código do país forem None, ajuste para Montreal e ca
         if city is None and country_code is None:
             location_details['Location']['City'] = 'Montreal'
             location_details['Location']['CountryCode'] = 'ca'
 
         date_text = event_page.find('div', class_='x1e56ztr x1xmf6yo').text.strip() if event_page.find('div', class_='x1e56ztr x1xmf6yo') else None
 
-        # Extrair StartTime e EndTime usando regex
         if date_text:
             match = re.search(r'(\d{1,2}:\d{2}\s?[AP]M)\s?–\s?(\d{1,2}:\d{2}\s?[AP]M)', date_text)
             if match:
@@ -158,7 +180,6 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
         else:
             start_time, end_time = None, None
 
-        # Initialize event_info here to avoid UnboundLocalError
         event_info = {
             'Title': event_title,
             'Description': event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs').text.strip() if event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs') else None,
@@ -169,7 +190,8 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
             'Organizer_IMG': event_page.find('img', class_='xz74otr')['src'] if event_page.find('img', class_='xz74otr') else None,
             'EventUrl': event_url,
             'StartTime': start_time,
-            'EndTime': end_time
+            'EndTime': end_time,
+            'gpttags': tags  # Adicionando as tags geradas pelo GPT
         }
 
         all_events.append(event_info)
@@ -178,7 +200,6 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
         driver.back()
 
     return all_events if all_events else None
-
 
 if __name__ == "__main__":
     sources = [

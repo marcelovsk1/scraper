@@ -2,7 +2,7 @@ import openai
 import json
 import re
 
-openai.api_key = "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"
+openai.api_key = "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"
 
 def generate_tags(event_title):
     prompt = (
