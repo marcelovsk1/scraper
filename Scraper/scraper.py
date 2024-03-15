@@ -9,6 +9,35 @@ from selenium.webdriver.chrome.options import Options
 import geopy
 from geopy.geocoders import Nominatim
 from unidecode import unidecode
+import openai
+
+openai.api_key = "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"
+
+
+def generate_tags(title, description):
+    prompt = (
+        f"Generate tags related to the event \"{title}\". "
+        "These tags should be short, one-word keywords that accurately represent the essence of the event. "
+        "Please provide keywords that are directly related to the event title and description, and can be used as tags. "
+        "Here's a brief description of the event:\n"
+        f"{description}\n\n"
+        "Separate each tag with a comma and ensure that each tag is unique."
+    )
+
+    response = openai.Completion.create(
+        engine="davinci-002",
+        prompt=prompt,
+        max_tokens=50,
+        n=1,
+        stop=None
+    )
+
+    tags = response.choices[0].text.strip().split(",")
+    formatted_tags = [tag.strip() for tag in tags]
+
+    return tags
+
+
 
 def calculate_similarity(str1, str2):
     return fuzz.token_sort_ratio(str1, str2)
@@ -119,12 +148,14 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=10):
 
         event_title_elem = event_page.find('span', class_='x1lliihq x6ikm8r x10wlt62 x1n2onr6')
         if event_title_elem:
-            event_title = event_title_elem.text.strip()
+            title = event_title_elem.text.strip()
             # if any(calculate_similarity(event_title, existing_title) >= 90 for existing_title in unique_event_titles):
-            if any(event_title == existing_title for existing_title in unique_event_titles):
+            if any(title == existing_title for existing_title in unique_event_titles):
                 continue
         else:
             continue
+
+        description = event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs').text.strip() if event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs') else None
 
         location_div = event_page.find('div', class_='x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz xt0b8zv xzsf02u x1s688f')
         location_span = event_page.find('span', class_='xt0psk2')
@@ -142,6 +173,8 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=10):
 
         address_span = event_page.find('span', class_='x193iq5w xeuugli x13faqbe x1vvkbs xlh3980 xvmahel x1n0sxbx x1lliihq x1s928wv xhkezso x1gmr53x x1cpjm7i x1fgarty x1943h6x x4zkp8e x3x7a5m x1f6kntn xvq8zen xo1l8bm xi81zsa x1yc453h')
         address = address_span.text.strip() if address_span else None
+
+        tags = generate_tags(title, description)
 
         location_details = {
             'Location': {
@@ -182,8 +215,8 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=10):
             start_time, end_time = None, None
 
         event_info = {
-            'Title': event_title,
-            'Description': event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs').text.strip() if event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs') else None,
+            'Title': title,
+            'Description': description,
             'Date': date_text,
             **location_details,
             'ImageURL': event_page.find('img', class_='xz74otr x1ey2m1c x9f619 xds687c x5yr21d x10l6tqk x17qophe x13vifvy xh8yej3')['src'] if event_page.find('img', class_='xz74otr x1ey2m1c x9f619 xds687c x5yr21d x10l6tqk x17qophe x13vifvy xh8yej3') else None,
@@ -191,11 +224,12 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=10):
             'Organizer_IMG': event_page.find('img', class_='xz74otr')['src'] if event_page.find('img', class_='xz74otr') else None,
             'EventUrl': event_url,
             'StartTime': start_time,
-            'EndTime': end_time
+            'EndTime': end_time,
+            'gpttags': tags  # Adicionando as tags geradas pelo GPT
         }
 
         all_events.append(event_info)
-        unique_event_titles.add(event_title)
+        unique_event_titles.add(title)
 
         driver.back()
 
@@ -362,19 +396,20 @@ def scrape_eventbrite_events(driver, url, selectors, max_pages=40):
             location_element = event_page.find('p', class_='location-info__address-text')
             location = location_element.text.strip() if location_element else None
             ImageURL = get_previous_page_image_url(driver)
+            tags = generate_tags(title, description)
 
             latitude, longitude = get_coordinates(location)
 
-            tags_elements = event_page.find_all('li', class_='tags-item inline')
+            # tags_elements = event_page.find_all('li', class_='tags-item inline')
 
-            tags = []
-            for tag_element in tags_elements:
-                tag_link = tag_element.find('a')
-                if tag_link:
-                    tag_text = tag_link.text.strip().replace("#", "")  # Remove the "#"
-                    tags.append(tag_text)
+            # tags = []
+            # for tag_element in tags_elements:
+            #     tag_link = tag_element.find('a')
+            #     if tag_link:
+            #         tag_text = tag_link.text.strip().replace("#", "")  # Remove the "#"
+            #         tags.append(tag_text)
 
-            event_info['Tags'] = tags
+            # event_info['Tags'] = tags
 
             organizer = event_page.find('a', class_='descriptive-organizer-info__name-link') if event_page.find('a', class_='descriptive-organizer-info__name-link') else None
             image_url_organizer = event_page.find('svg', class_='eds-avatar__background eds-avatar__background--has-border')
@@ -437,7 +472,7 @@ def main():
                 'Location': {'tag': 'p', 'class': 'location-info__address-text'},
                 'Price': {'tag': 'p', 'class': 'event-card__price'},
                 'ImageURL': {'tag': 'img', 'class': 'event-card__image'},
-                'Tags': {'tag': 'ul', 'class': 'event-card__tags'},
+                # 'Tags': {'tag': 'ul', 'class': 'event-card__tags'},
                 'Organizer': {'tag': 'a', 'class': 'event-card__organizer'},
                 'Organizer_IMG': {'tag': 'svg', 'class': 'eds-avatar__background eds-avatar__background--has-border'}
             }
