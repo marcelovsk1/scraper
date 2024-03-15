@@ -11,23 +11,41 @@ from geopy.geocoders import Nominatim
 from unidecode import unidecode
 import openai
 
-openai.api_key = "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"
-
+openai.api_key = "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"
 
 def generate_tags(title, description):
     prompt = (
         f"Generate tags related to the event \"{title}\". "
-        "These tags should be short, one-word keywords that accurately represent the essence of the event. "
+        "These tags must be short, one-word keywords that accurately represent the essence of the event. "
         "Please provide keywords that are directly related to the event title and description, and can be used as tags. "
         "Here's a brief description of the event:\n"
         f"{description}\n\n"
-        "Separate each tag with a comma and ensure that each tag is unique."
+        "Separate each tag with a comma and ensure that each tag is unique.\n"
+        "Avoid including irrelevant information or instructions in the tags. "
+        "Focus solely on keywords that describe the event."
+        "Separate each tag with a comma and ensure that each tag is unique.\n"
+        "Tags:\n"
+        "   \"Canada Events\",\n"
+        "   \"Quebec Events\",\n"
+        "   \"Things to do in Montreal, Canada\",\n"
+        "   \"Montreal Conferences\",\n"
+        "   \"Montreal Other Conferences\",\n"
+        "   \"diversity\",\n"
+        "   \"futureofwork\",\n"
+        "   \"conference\",\n"
+        "   \"academic\",\n"
+        "   \"futureskills\",\n"
+        "   \"wil\",\n"
+        "   \"future_of_work\",\n"
+        "   \"futureworkforce\",\n"
+        "   \"human_resources\",\n"
+        "   \"experiential_learning\"\n"
     )
 
     response = openai.Completion.create(
         engine="davinci-002",
         prompt=prompt,
-        max_tokens=50,
+        max_tokens=150,
         n=1,
         stop=None
     )
@@ -35,8 +53,7 @@ def generate_tags(title, description):
     tags = response.choices[0].text.strip().split(",")
     formatted_tags = [tag.strip() for tag in tags]
 
-    return tags
-
+    return formatted_tags
 
 
 def calculate_similarity(str1, str2):
