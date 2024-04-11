@@ -5,7 +5,7 @@
         "Date": null,
         "Location": null,
         "Price": null,
-        "ImageURL": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F681255919%2F369560566375%2F1%2Foriginal.20240123-233436?w=512&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=304b229c8d3bfb1a195395e75a3f8c09",
+        "ImageURL": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F693824489%2F390016186357%2F1%2Foriginal.20240209-153647?w=512&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=f64338bceb10422072fb356d6bcc6d7c",
         "Organizer": null,
         "Organizer_IMG": null,
         "Image URL Organizer": null,
@@ -13,14 +13,41 @@
         "EndTime": null,
         "Latitude": null,
         "Longitude": null,
-        "EventUrl": "https://www.eventbrite.ca/e/medea-night-2-tickets-870369577837?aff=ebdssbdestsearch",
+        "EventUrl": "https://www.eventbrite.com/e/emp1re-a-montreal-tickets-870407421027?aff=ebdssbdestsearch",
         "Tags": [
-            "For instance",
-            "you would receive [] if the only relevant tags were \"1\" and \"7\"",
-            "and they were both made of the same word: \"brunch\" and \"food\".\n\nExamples:\n\n[input] => {\"description\":\"sausage\n    \\nbreakfast\"\n        \"tags\" : [\n\n        1 ][xxxxxxxx]\n\n    ] ==(output)==\n\n    []   \"5\"\n\n    //The event has relevant tags \"sausage\"",
-            "//    \"food\" and \"brunch\" which were made\n    //of the same word",
-            "which is \"sausage\"\n    //and was assigned both the IDs 5     xxyxxx\n    //and 0.\n\n    //The event has 7 relevant tags:"
+            "In the possible tags list 9means that there are no partys already found relevant to this event.\n\nInput Format:\nThe first line of the input contains the integer",
+            "indicates the amount of events to search for.\nIn the second line",
+            "indicates the number of years for installing as a default the application also what is the minimum amount of replies a party must have to be accepted to the system.\nThe third line contains",
+            "the list of tags.\nThe fourth lines contains",
+            "the application number of parties.\n\nOutput Format: In the next one line contains all party's numbers for which the event's been sgrached. For each new party the application number",
+            "a zero followed by"
         ],
-        "ID_EventBrite": 27
+        "ID_EventBrite": 91
+    },
+    {
+        "Title": null,
+        "Description": null,
+        "Date": null,
+        "Location": null,
+        "Price": null,
+        "ImageURL": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F693824489%2F390016186357%2F1%2Foriginal.20240209-153647?w=512&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=f64338bceb10422072fb356d6bcc6d7c",
+        "Organizer": null,
+        "Organizer_IMG": null,
+        "Image URL Organizer": null,
+        "StartTime": null,
+        "EndTime": null,
+        "Latitude": null,
+        "Longitude": null,
+        "EventUrl": "https://www.eventbrite.ca/e/sunday-stand-up-spectacular-live-comedy-by-mtlcomedyclubcom-tickets-866912407347?aff=ebdssbdestsearch",
+        "Tags": [
+            "For example",
+            "the preceding list of tags corresponds to event #2. The output value for this event is:\n[1",
+            "2",
+            "6",
+            "0]\n\nQ: (5 points) A linked list of integers is implemented in Java",
+            "where two methods are available:singlenode andthreemethods.\nabout the code below",
+            "please answer the question(s) below.\nA: A . singlenodecommand can only be executed after athreemethod is executed.\nB. Output message d should be Output message a followed by Output message c followed by Output message c.\nC. threesinglenodecommand can only be executed after two demands ofthe singlenodecommand are made.\nD. Output message a should never be"
+        ],
+        "ID_EventBrite": 97
     }
 ]

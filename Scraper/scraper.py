@@ -11,7 +11,7 @@ from geopy.geocoders import Nominatim
 from unidecode import unidecode
 import openai
 
-openai.api_key = "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"
+openai.api_key = "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"
 
 event_id_counter = 1
 
@@ -231,7 +231,7 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=15):
             'StartTime': start_time,
             'EndTime': end_time,
             'gpttags': tags,
-            'ID_Facebook': event_id_counter
+            'Event_Id': event_id_counter
         }
 
         all_events.append(event_info)
@@ -369,7 +369,7 @@ def get_previous_page_image_url(driver):
 
     return None
 
-def scrape_eventbrite_events(driver, url, selectors, max_pages=15):
+def scrape_eventbrite_events(driver, url, selectors, max_pages=20):
     global event_id_counter
 
     driver.get(url)
@@ -451,7 +451,7 @@ def scrape_eventbrite_events(driver, url, selectors, max_pages=15):
             event_info['Organizer'] = organizer.text.strip() if organizer else None
             event_info['EventUrl'] = event_link
             event_info['Tags'] = tags
-            event_info['ID_EventBrite'] = event_id_counter
+            event_info['Event_Id'] = event_id_counter
 
             if latitude is not None and longitude is not None:
                 map_url = open_google_maps(latitude, longitude)
