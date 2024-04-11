@@ -1,1 +1,26 @@
-[]
+[
+    {
+        "Title": null,
+        "Description": null,
+        "Date": null,
+        "Location": null,
+        "Price": null,
+        "ImageURL": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F681255919%2F369560566375%2F1%2Foriginal.20240123-233436?w=512&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=304b229c8d3bfb1a195395e75a3f8c09",
+        "Organizer": null,
+        "Organizer_IMG": null,
+        "Image URL Organizer": null,
+        "StartTime": null,
+        "EndTime": null,
+        "Latitude": null,
+        "Longitude": null,
+        "EventUrl": "https://www.eventbrite.ca/e/medea-night-2-tickets-870369577837?aff=ebdssbdestsearch",
+        "Tags": [
+            "For instance",
+            "you would receive [] if the only relevant tags were \"1\" and \"7\"",
+            "and they were both made of the same word: \"brunch\" and \"food\".\n\nExamples:\n\n[input] => {\"description\":\"sausage\n    \\nbreakfast\"\n        \"tags\" : [\n\n        1 ][xxxxxxxx]\n\n    ] ==(output)==\n\n    []   \"5\"\n\n    //The event has relevant tags \"sausage\"",
+            "//    \"food\" and \"brunch\" which were made\n    //of the same word",
+            "which is \"sausage\"\n    //and was assigned both the IDs 5     xxyxxx\n    //and 0.\n\n    //The event has 7 relevant tags:"
+        ],
+        "ID_EventBrite": 27
+    }
+]

@@ -4,33 +4,59 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import time
 from datetime import datetime
-import requests
 from geopy.geocoders import Nominatim
 import openai
 
-openai.api_key = "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"
+openai.api_key = "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"
 
-def generate_tags(event_title):
+# Variável global para rastrear o ID
+event_id_counter = 1
+
+def generate_tags(title, description):
     prompt = (
-        f"Generate tags related to the event \"{event_title}\". "
-        "These tags should be short, one-word keywords that accurately represent the essence of the event. "
-        "Please provide keywords that are directly related to the event title and can be used as tags. "
-        "Separate each tag with a comma and ensure that each tag is unique."
+        f"Generate tags related to the event \"{title}\". "
+        "These tags must be short, one-word keywords that accurately represent the essence of the event. "
+        "Please provide keywords that are directly related to the event title and description, and can be used as tags. "
+        "Here's a brief description of the event:\n"
+        f"{description}\n\n"
+        "Separate each tag with a comma and ensure that each tag is unique.\n"
+        "Avoid including irrelevant information or instructions in the tags. "
+        "Focus solely on keywords that describe the event."
+        "Separate each tag with a comma and ensure that each tag is unique.\n"
+        "Tags:\n"
+        "   \"Canada Events\",\n"
+        "   \"Quebec Events\",\n"
+        "   \"Things to do in Montreal, Canada\",\n"
+        "   \"Montreal Conferences\",\n"
+        "   \"Montreal Other Conferences\",\n"
+        "   \"diversity\",\n"
+        "   \"futureofwork\",\n"
+        "   \"conference\",\n"
+        "   \"academic\",\n"
+        "   \"futureskills\",\n"
+        "   \"wil\",\n"
+        "   \"future_of_work\",\n"
+        "   \"futureworkforce\",\n"
+        "   \"human_resources\",\n"
+        "   \"experiential_learning\"\n"
     )
 
     response = openai.Completion.create(
         engine="davinci-002",
         prompt=prompt,
-        max_tokens=50,  # Defina o número máximo de tokens de acordo com suas necessidades
+        max_tokens=150,
         n=1,
         stop=None
     )
 
-    # Extrair as tags e formatá-las corretamente
-    tags = response.choices[0].text.strip().split(",")
-    formatted_tags = [tag.strip() for tag in tags]
-    unique_tags = list(set(formatted_tags))  # Remover tags duplicadas
-    return unique_tags
+    tags = response.choices[0].text.strip().split(",")  # Obtem as tags do GPT
+    formatted_tags = [tag.strip() for tag in tags]  # Remove espaços extras
+
+    # Formata as tags conforme o padrão esperado
+    formatted_tags_str = ",\n".join(['   "{}"'.format(tag.strip()) for tag in formatted_tags])
+
+    return formatted_tags_str
+
 
 def scroll_to_bottom(driver, max_scroll=1):
     for _ in range(max_scroll):
@@ -94,6 +120,8 @@ def get_location_details(latitude, longitude):
 
 
 def scrape_facebook_events(driver, url, selectors, max_scroll=30):
+    global event_id_counter  # Referenciando a variável global
+
     driver.get(url)
     driver.implicitly_wait(20)
 
@@ -126,18 +154,45 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
             if any(event_title == existing_title for existing_title in unique_event_titles):
                 continue
         else:
-            continue  # Skip this event if title element is not found
+            continue
 
-        # Geração de tags usando GPT
-        tags = generate_tags(event_title)
+        description = event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs').text.strip() if event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs') else None
+
+        tags = generate_tags(event_title, description if description else "")
+
+        location_div = event_page.find('div', class_='x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz xt0b8zv xzsf02u x1s688f')
+        events = webpage.find_all(selectors['event']['tag'], class_=selectors['event'].get('class'))
+
+    for event in events:
+        event_link = event.find('a', href=True)
+        if not event_link:
+            continue
+
+        event_url = 'https://www.facebook.com' + event_link['href'] if event_link['href'].startswith('/') else event_link['href']
+
+        driver.get(event_url)
+        time.sleep(1)
+
+        event_page_content = driver.page_source
+        event_page = BeautifulSoup(event_page_content, 'html.parser')
+
+        event_title_elem = event_page.find('span', class_='x1lliihq x6ikm8r x10wlt62 x1n2onr6')
+        if event_title_elem:
+            event_title = event_title_elem.text.strip()
+            if any(event_title == existing_title for existing_title in unique_event_titles):
+                continue
+        else:
+            continue
+
+        description = event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs').text.strip() if event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs') else None
+
+        tags = generate_tags(event_title, description if description else "")
 
         location_div = event_page.find('div', class_='x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz xt0b8zv xzsf02u x1s688f')
         location_span = event_page.find('span', class_='xt0psk2')
-
         location_text = location_div.text.strip() if location_div else (location_span.text.strip() if location_span else None)
 
         latitude, longitude = get_coordinates(location_text)
-
         google_maps_url = open_google_maps(latitude, longitude)
 
         address_span = event_page.find('span', class_='x193iq5w xeuugli x13faqbe x1vvkbs xlh3980 xvmahel x1n0sxbx x1lliihq x1s928wv xhkezso x1gmr53x x1cpjm7i x1fgarty x1943h6x x4zkp8e x3x7a5m x1f6kntn xvq8zen xo1l8bm xi81zsa x1yc453h')
@@ -182,7 +237,7 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
 
         event_info = {
             'Title': event_title,
-            'Description': event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs').text.strip() if event_page.find('div', class_='xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs') else None,
+            'Description': description,
             'Date': date_text,
             **location_details,
             'ImageURL': event_page.find('img', class_='xz74otr x1ey2m1c x9f619 xds687c x5yr21d x10l6tqk x17qophe x13vifvy xh8yej3')['src'] if event_page.find('img', class_='xz74otr x1ey2m1c x9f619 xds687c x5yr21d x10l6tqk x17qophe x13vifvy xh8yej3') else None,
@@ -191,11 +246,14 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=30):
             'EventUrl': event_url,
             'StartTime': start_time,
             'EndTime': end_time,
-            'gpttags': tags  # Adicionando as tags geradas pelo GPT
+            'Tags': tags,
+            'ID_Facebook': event_id_counter
         }
 
         all_events.append(event_info)
         unique_event_titles.add(event_title)
+
+        event_id_counter += 1  # Incrementando o contador de ID
 
         driver.back()
 
@@ -218,7 +276,7 @@ if __name__ == "__main__":
     for source in sources:
         print(f"Scraping events from: {source['name']}")
         if source['name'] == 'Facebook':
-            events = scrape_facebook_events(driver, source['url'], source['selectors'])
+            events = scrape_facebook_events(driver, source['url'], source['selectors'])  # Corrected incomplete statement
             if events is not None:
                 for event in events:
                     if 'Div' in event['Location']:

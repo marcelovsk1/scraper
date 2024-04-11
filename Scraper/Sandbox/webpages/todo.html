@@ -55,6 +55,7 @@ if event_title_elem:
 else:
     continue
 
+DONE
 ###################
 
 2. Date
@@ -85,6 +86,7 @@ FOR EVENTS THAT SHOW ONLY THE START TIME
 "Date": "Debute le sam., 9 mars 2024 17:00 EST"
 "StartTime" = 17:00 - "EndTime" = None
 
+DONE
 #####################
 
 3. Location
@@ -97,6 +99,7 @@ The function get_location_details(latitude, longitude) also uses Nominatim,
 but this time to perform a geographic reversal, that is, based on geographic coordinates
 (latitude and longitude), obtain additional details about the location, such as address, city and code of country.
 
+DONE
 #####################
 
 
@@ -104,3 +107,61 @@ but this time to perform a geographic reversal, that is, based on geographic coo
 ### organizer email
 ### create an ID for each event
 ### Isolate number from price
+
+################################# 22/03
+
+Optimize this prompt:
+
+Generate tags related to the event {title}. This the description of our events,
+if you need more information to generate tags: {description}.
+These tags must be short, one-word keywords that accurately
+represent the essence of the event.
+
+Separate each tag with a comma and ensure that each tag is unique.
+Avoid including irrelevant information or instructions in the tags.
+Focus solely on keywords that describe the event.
+Example tags for this event could include:
+- Brunch
+- Montreal
+- Music
+- DJ
+- Entertainment
+- Social
+- Food
+- Drinks
+Please avoid using full sentences or phrases as tags.
+Ensure that the tags are concise and directly relevant to the event.
+
+------------------------------------------------------------------------------------------------------------------
+
+Create 10 tags  for the event  "Piano Fantasy with Serouj Kradjian & Band" using this description:
+"In his Piano Fantasy tour, Grammy nominated and Juno winning pianist and composer Serouj Kradjian breaks all cultural
+and stylistic barriers in a breathtaking show celebrating dive\u2026 See more".
+
+The tags should be one-word, unique keywords that accurately represent the event. Avoid irrelevant information and
+focus on the event's essence. For example, tags could be: Brunch, Montreal, Music, DJ, Entertainment, Social, Food,
+Drinks. Do not use full sentences or phrases, and ensure the tags are concise and directly relevant.
+
+-------------------------------------------------------------------------------------------------------------------
+
+Your task is to select all the tags from the following list that are the relevant to describe the event
+"Piano Fantasy with Serouj Kradjian & Band".
+
+This is the event description: "In his Piano Fantasy tour, Grammy nominated and Juno winning pianist and composer
+Serouj Kradjian breaks all cultural and stylistic barriers in a breathtaking show celebrating dive\u2026 See more"
+
+This is the list of possible tags:
+1 - brunch
+2 - montreal
+3 - music
+4 - dj
+5 - entertainment
+6 - social
+7 - food
+8 - dr
+0 - No relevant tag
+
+Output only a JSON array of all the numbers corresponding to the relevant tags for the event.
+
+
+After implement in your scraping, with we have the database connection, insert the tags in the prompt dinamically, and be sure the tags still in the database

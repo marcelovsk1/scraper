@@ -11,36 +11,29 @@ from geopy.geocoders import Nominatim
 from unidecode import unidecode
 import openai
 
-openai.api_key = "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"
+openai.api_key = "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"
+
+event_id_counter = 1
 
 def generate_tags(title, description):
+
     prompt = (
-        f"Generate tags related to the event \"{title}\". "
-        "These tags must be short, one-word keywords that accurately represent the essence of the event. "
-        "Please provide keywords that are directly related to the event title and description, and can be used as tags. "
-        "Here's a brief description of the event:\n"
-        f"{description}\n\n"
-        "Separate each tag with a comma and ensure that each tag is unique.\n"
-        "Avoid including irrelevant information or instructions in the tags. "
-        "Focus solely on keywords that describe the event."
-        "Separate each tag with a comma and ensure that each tag is unique.\n"
-        "Tags:\n"
-        "   \"Canada Events\",\n"
-        "   \"Quebec Events\",\n"
-        "   \"Things to do in Montreal, Canada\",\n"
-        "   \"Montreal Conferences\",\n"
-        "   \"Montreal Other Conferences\",\n"
-        "   \"diversity\",\n"
-        "   \"futureofwork\",\n"
-        "   \"conference\",\n"
-        "   \"academic\",\n"
-        "   \"futureskills\",\n"
-        "   \"wil\",\n"
-        "   \"future_of_work\",\n"
-        "   \"futureworkforce\",\n"
-        "   \"human_resources\",\n"
-        "   \"experiential_learning\"\n"
-    )
+    f"Create 10 tags for the event \"{title}\" using the \"{description}\".\n"
+    "The tags should be one-word, unique keywords that accurately represent the event. Avoid irrelevant information and"
+    "focus on the event's essence. This is the list of possible tags:\n"
+    "1 - brunch\n"
+    "2 - montreal\n"
+    "3 - music\n"
+    "4 - dj\n"
+    "5 - entertainment\n"
+    "6 - social\n"
+    "7 - food\n"
+    "8 - drinks\n"
+    "0 - No relevant tag\n"
+
+    "Output only a JSON array of all the numbers corresponding to the relevant tags for the event."
+)
+
 
     response = openai.Completion.create(
         engine="davinci-002",
@@ -54,7 +47,6 @@ def generate_tags(title, description):
     formatted_tags = [tag.strip() for tag in tags]
 
     return formatted_tags
-
 
 def calculate_similarity(str1, str2):
     return fuzz.token_sort_ratio(str1, str2)
@@ -83,7 +75,7 @@ def format_date(date_str, source):
 
 def get_coordinates(location):
     if location is None:
-        print("Location is None!")
+        # print("Location is None!")
         return None, None
 
     location = str(location)
@@ -110,7 +102,6 @@ def get_coordinates(location):
 
     return None, None
 
-
 def open_google_maps(latitude, longitude):
     google_maps_url = f"https://www.google.com/maps/search/?api=1&query={latitude},{longitude}"
     return google_maps_url
@@ -135,9 +126,10 @@ def get_location_details(latitude, longitude):
 
     return None, None, None
 
-
 #### FACEBOOK ####
-def scrape_facebook_events(driver, url, selectors, max_scroll=10):
+def scrape_facebook_events(driver, url, selectors, max_scroll=15):
+    global event_id_counter
+
     driver.get(url)
     driver.implicitly_wait(20)
 
@@ -166,8 +158,7 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=10):
         event_title_elem = event_page.find('span', class_='x1lliihq x6ikm8r x10wlt62 x1n2onr6')
         if event_title_elem:
             title = event_title_elem.text.strip()
-            # if any(calculate_similarity(event_title, existing_title) >= 90 for existing_title in unique_event_titles):
-            if any(title == existing_title for existing_title in unique_event_titles):
+            if any(calculate_similarity(title, existing_title) >= 90 for existing_title in unique_event_titles):
                 continue
         else:
             continue
@@ -176,15 +167,12 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=10):
 
         location_div = event_page.find('div', class_='x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz xt0b8zv xzsf02u x1s688f')
         location_span = event_page.find('span', class_='xt0psk2')
-
         location_text = location_div.text.strip() if location_div else (location_span.text.strip() if location_span else None)
 
         if location_text:
             latitude, longitude = get_coordinates(location_text)
         else:
             latitude, longitude = None, None
-
-        latitude, longitude = get_coordinates(location_text)
 
         google_maps_url = open_google_maps(latitude, longitude)
 
@@ -242,11 +230,14 @@ def scrape_facebook_events(driver, url, selectors, max_scroll=10):
             'EventUrl': event_url,
             'StartTime': start_time,
             'EndTime': end_time,
-            'gpttags': tags  # Adicionando as tags geradas pelo GPT
+            'gpttags': tags,
+            'ID_Facebook': event_id_counter
         }
 
         all_events.append(event_info)
         unique_event_titles.add(title)
+
+        event_id_counter += 1
 
         driver.back()
 
@@ -360,7 +351,6 @@ def get_coordinates(location):
 
     return None, None
 
-
 def open_google_maps(latitude, longitude):
     google_maps_url = f"https://www.google.com/maps/search/?api=1&query={latitude},{longitude}"
     return google_maps_url
@@ -379,7 +369,9 @@ def get_previous_page_image_url(driver):
 
     return None
 
-def scrape_eventbrite_events(driver, url, selectors, max_pages=40):
+def scrape_eventbrite_events(driver, url, selectors, max_pages=15):
+    global event_id_counter
+
     driver.get(url)
     driver.implicitly_wait(20)
 
@@ -414,6 +406,14 @@ def scrape_eventbrite_events(driver, url, selectors, max_pages=40):
             location = location_element.text.strip() if location_element else None
             ImageURL = get_previous_page_image_url(driver)
             tags = generate_tags(title, description)
+            event_id_counter += 1
+
+            # Isolating the number from the price using regular expressions
+            price_number = None
+            if price:
+                price_matches = re.findall(r'\d+\.?\d*', price)
+                if price_matches:
+                    price_number = float(price_matches[0])
 
             latitude, longitude = get_coordinates(location)
 
@@ -441,16 +441,17 @@ def scrape_eventbrite_events(driver, url, selectors, max_pages=40):
 
             event_info['Title'] = title
             event_info['Description'] = description
-            event_info['Price'] = price
+            event_info['Price'] = price_number
             event_info['Date'] = date
             event_info['StartTime'], event_info['EndTime'] = extract_start_end_time(date)
             event_info['Location'] = location
             event_info['ImageURL'] = ImageURL
             event_info['Latitude'] = latitude
             event_info['Longitude'] = longitude
-            event_info['Tags'] = tags
             event_info['Organizer'] = organizer.text.strip() if organizer else None
             event_info['EventUrl'] = event_link
+            event_info['Tags'] = tags
+            event_info['ID_EventBrite'] = event_id_counter
 
             if latitude is not None and longitude is not None:
                 map_url = open_google_maps(latitude, longitude)
